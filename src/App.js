@@ -8,28 +8,36 @@ function App() {
 
   useEffect(() => {
     // This runs when the component mounts
-    fetch('http://localhost:5000/bands')  // 1. Makes HTTP GET request to your Express server
-      .then(response => response.json())  // 2. Converts the response to JSON
-      .then(data => setBands(data))      // 3. Updates the bands state with the data
-      .catch(error => console.error('Error:', error));
+    fetch('/bands', {
+        credentials: 'include'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => setBands(data))
+    .catch(error => console.error('Error:', error));
   }, []); // Empty array means this only runs once when component mounts
   const handleCreate = () => {
     const newBand = {
       name: newBandName,
     }
-    fetch('http://localhost:5000/bands', {
+    fetch('/bands', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(newBand),
     })
-    .then(response => response.json())
-    // After creating the band, fetch the updated list
-    .then(data => {
-      // Fetch the updated list of bands
-      return fetch('http://localhost:5000/bands');
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
     })
+    .then(() => fetch('/bands'))
     .then(response => response.json())
     .then(data => setBands(data))
     .catch(error => console.error('Error:', error));

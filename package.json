@@ -22,7 +22,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "dev": "npx nodemon src/App.js"
+    "dev": "npx nodemon src/App.js",
+    "server": "nodemon db.js"
   },
   "eslintConfig": {
     "extends": [
@@ -42,5 +43,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://localhost:3001"
 }
