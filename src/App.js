@@ -3,69 +3,57 @@ import './App.css';
 import { DeepSeekAPI } from 'deepseek-api';
 
 function App() {
-  // State to store the bands data
-  const [bands, setBands] = useState([]);
-  const [newBandName, setNewBandName] = useState('');
+  const [userMessage, setUserMessage] = useState('');
+  const [chatbotResponse, setChatbotResponse] = useState('');
+  const [sessionId, setSessionId] = useState('');
 
   useEffect(() => {
-    // This runs when the component mounts
-    fetch('/bands', {
-        credentials: 'include'
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => setBands(data))
-    .catch(error => console.error('Error:', error));
-  }, []); // Empty array means this only runs once when component mounts
-  const handleCreate = () => {
-    const newBand = {
-      name: newBandName,
+    // Check if a session ID already exists in local storage
+    let existingSessionId = localStorage.getItem('sessionId');
+    if (!existingSessionId) {
+      // Generate a new session ID if it doesn't exist
+      existingSessionId = `session-${Date.now()}-${Math.random()}`;
+      localStorage.setItem('sessionId', existingSessionId);
     }
-    fetch('/bands', {
+    setSessionId(existingSessionId);
+  }, []);
+
+  const handleInputChange = (e) => {
+    setUserMessage(e.target.value);
+  };
+
+  const handleSendMessage = () => {
+    fetch(`http://localhost:3001/message/${sessionId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(newBand),
+      body: JSON.stringify({ message: userMessage, sessionId }),
     })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(() => fetch('/bands'))
-    .then(response => response.json())
-    .then(data => setBands(data))
-    .catch(error => console.error('Error:', error));
-    setNewBandName('');
-  }
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        setChatbotResponse(`${data.response}`);
+      })
+      .catch(error => console.error('Error:', error));
+  };
 
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Bands List</h1>
-        {/* 4. Renders the bands data */}
-        <input 
-          type="text" 
-          placeholder="Search for a band" 
-          value={newBandName}
-          onChange={(e) => setNewBandName(e.target.value)}
+        <h1>Chat with Bot</h1>
+        <input
+          type="text"
+          placeholder="Type your message"
+          value={userMessage}
+          onChange={handleInputChange}
         />
-        <button onClick={handleCreate}>Create</button>
-        {bands && bands.length > 0 ? (
-          <ul>
-            {bands.map(band => (
-              <li key={band.id}>{band.name}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>No bands found</p>
-        )}
+        <button onClick={handleSendMessage}>Send</button>
+        {chatbotResponse && <p>{chatbotResponse}</p>}
       </header>
     </div>
   );
