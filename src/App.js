@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import './App.css';
-import { DeepSeekAPI } from 'deepseek-api';
 
 function App() {
   const [userMessage, setUserMessage] = useState('');
