@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { getBand, createBand, getBands, pool } from './database.js';
+import { createBand, getBands, pool } from './database.js';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 

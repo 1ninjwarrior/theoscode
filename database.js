@@ -1,7 +1,6 @@
 import mysql from 'mysql2';
 import dotenv from 'dotenv';
 import fs from 'fs';
-import fs from 'fs';
 
 dotenv.config();
 
@@ -20,11 +19,6 @@ export const pool = mysql.createPool({
         ca: sslCert,  // Use the certificate for SSL verification
         minVersion: 'TLSv1.2'
     }
-    connectionLimit: 10,
-    ssl: {
-        ca: sslCert,  // Use the certificate for SSL verification
-        minVersion: 'TLSv1.2'
-    }
 }).promise();
 
 // Test database connection
@@ -36,24 +30,8 @@ pool.getConnection()
     .catch(err => {
         console.error('❌ Database connection error:', err.message);
     });
-// Test database connection
-pool.getConnection()
-    .then(connection => {
-        console.log('✅ Database connected successfully');
-        connection.release();
-    })
-    .catch(err => {
-        console.error('❌ Database connection error:', err.message);
-    });
 
 async function getBands() {
-    try {
-        const [rows] = await pool.query('SELECT * FROM bands');
-        return rows;
-    } catch (error) {
-        console.error('Error in getBands:', error);
-        throw error;
-    }
     try {
         const [rows] = await pool.query('SELECT * FROM bands');
         return rows;
@@ -84,34 +62,6 @@ async function getBand(id) {
         console.error('Error in getBand:', error);
         throw error;
     }
-    try {
-        const [result] = await pool.query(
-            'INSERT INTO bands (name) VALUES (?)',
-            [name]
-        );
-        return { id: result.insertId, name };
-    } catch (error) {
-        console.error('Error in createBand:', error);
-        throw error;
-    }
 }
-
-async function getBand(id) {
-    try {
-        const [rows] = await pool.query('SELECT * FROM bands WHERE id = ?', [id]);
-        return rows[0];
-    } catch (error) {
-        console.error('Error in getBand:', error);
-        throw error;
-    }
-}
-
-async function updateBand(id, name) {
-    const result = await pool.query(`
-        UPDATE bands
-        
-    `)
-}
-
 
 export { getBand, createBand, getBands };
