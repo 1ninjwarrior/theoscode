@@ -108,12 +108,22 @@ app.post('/message/:id', async (req, res) => {
     try {
         console.log(`Received message for session ${id}:`, message);
 
-        // Retrieve the existing conversation from the database
+        // Fetch the existing conversation from the database
         const [rows] = await pool.execute('SELECT * FROM conversations WHERE session_id = ?', [id]);
-        let conversation;
+
+        // Initialize messages array
         let messages = [];
 
-        messages = rows[0].messages;
+        // Check if a conversation was found
+        if (rows.length > 0) {
+            // Parse the messages from the database
+            try {
+                messages = rows[0].messages;
+            } catch (error) {
+                console.error('Error parsing messages:', error);
+                messages = []; // Reset messages if parsing fails
+            }
+        }
 
         // Add the new user message to the conversation
         messages.push({ role: "user", content: message });
@@ -134,7 +144,7 @@ app.post('/message/:id', async (req, res) => {
             await pool.execute('INSERT INTO conversations (session_id, messages) VALUES (?, ?)', [id, JSON.stringify(messages)]);
         }
 
-        res.json({ id: conversation ? conversation.id : null, response: response.choices[0].message.content });
+        res.json({ id: rows.length > 0 ? rows[0].id : null, response: response.choices[0].message.content });
     } catch (error) {
         console.error('Error in /message/:id route:', error.message);
         console.error('Stack trace:', error.stack);

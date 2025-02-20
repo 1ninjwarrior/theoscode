@@ -1,33 +1,24 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import './App.css';
 
 function App() {
   const [userMessage, setUserMessage] = useState('');
   const [chatbotResponse, setChatbotResponse] = useState('');
-  const [sessionId, setSessionId] = useState('');
 
-  useEffect(() => {
-    // Check if a session ID already exists in local storage
-    let existingSessionId = localStorage.getItem('sessionId');
-    if (!existingSessionId) {
-      // Generate a new session ID if it doesn't exist
-      existingSessionId = `session-${Date.now()}-${Math.random()}`;
-      localStorage.setItem('sessionId', existingSessionId);
-    }
-    setSessionId(existingSessionId);
-  }, []);
+  const { conversationId } = useParams();
 
   const handleInputChange = (e) => {
     setUserMessage(e.target.value);
   };
 
   const handleSendMessage = () => {
-    fetch(`http://localhost:3001/message/${sessionId}`, {
+    fetch(`http://localhost:3001/message/${conversationId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ message: userMessage, sessionId }),
+      body: JSON.stringify({ message: userMessage, conversationId }),
     })
       .then(response => {
         if (!response.ok) {
