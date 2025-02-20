@@ -1,9 +1,13 @@
 import mysql from 'mysql2';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 dotenv.config();
 
 console.log('Attempting database connection...');
+
+// Read the SSL certificate
+const sslCert = fs.readFileSync('./certs/us-west-2-bundle.pem');
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
@@ -12,7 +16,7 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
     connectionLimit: 10,
     ssl: {
-        rejectUnauthorized: false,  // This allows self-signed certificates
+        ca: sslCert,  // Use the certificate for SSL verification
         minVersion: 'TLSv1.2'
     }
 }).promise();

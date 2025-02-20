@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './App.css';
+import { DeepSeekAPI } from 'deepseek-api';
 
 function App() {
   // State to store the bands data
