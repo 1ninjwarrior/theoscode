@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import './App.css';
+import ExerciseComponent from './ExerciseComponent.js';
 
 function App() {
   const [userMessage, setUserMessage] = useState('');
@@ -27,7 +28,8 @@ function App() {
         return response.json();
       })
       .then(data => {
-        setChatbotResponse(`${data.response}`);
+
+        setChatbotResponse(data.response.split('#'));
       })
       .catch(error => console.error('Error:', error));
   };
@@ -43,10 +45,13 @@ function App() {
           onChange={handleInputChange}
         />
         <button onClick={handleSendMessage}>Send</button>
-        {chatbotResponse && <p>{chatbotResponse}</p>}
+        {chatbotResponse && chatbotResponse.map((response, index) => (
+          <ExerciseComponent key={index} index={index} response={response} />
+        
+        ))}
       </header>
     </div>
-  );
+  );  
 }
 
 export default App;

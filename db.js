@@ -1,12 +1,13 @@
 import express from 'express';
 import cors from 'cors';
-import { createBand, getBands, pool } from './database.js';
+import { pool } from './database.js';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const app = express();
+const defaultMessage = "Always answer like a personal trainer and each exercise should start with a #. Make sure to include the number of reps and RPE for each exercise. An example could be #1. Bench Press 10 reps 8 RPE, #2. Squats 10 reps 8 RPE, #3. Deadlifts 10 reps 8 RPE.";
 
 // Configure CORS with specific options
 app.use(cors({
@@ -23,54 +24,17 @@ const openai = new OpenAI({
     apiKey: process.env.REACT_APP_OPENAI_API_KEY,
 });
 
-let messages = {}; // Use an object to store messages by session ID
-
-// Add a test route
-app.get('/test', (req, res) => {
-    res.json({ message: 'Server is working' });
-});
-
-// Define routes
-app.get('/bands', async (req, res) => {
-    try {
-        const bands = await getBands();
-        console.log('Bands retrieved:', bands);
-        res.json(bands);
-    } catch (err) {
-        console.error('Error in /bands route:', err);
-        res.status(500).json({ 
-            error: 'Database error',
-            details: err.message,
-            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-        });
-    }
-});
-
-app.post('/bands', async (req, res) => {
-    try {
-        const { name } = req.body;
-        console.log('Attempting to create band:', name);
-        const result = await createBand(name);
-        res.status(201).json(result);
-    } catch (err) {
-        console.error('Error in POST /bands route:', err);
-        res.status(500).json({ 
-            error: 'Database error',
-            details: err.message,
-            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-        });
-    }
-});
+let messages = {};
 
 // Chatbot route
 app.post('/message/new', async (req, res) => {
     const { message, sessionId } = req.body;
     try {
-        console.log('Received message:', message);
-        const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: message }],
-        });
+        // Define the system message
+        const systemMessage = {
+            role: "system",
+            content: defaultMessage
+        };
 
         // Initialize session if it doesn't exist
         if (!messages[sessionId]) {
@@ -81,8 +45,17 @@ app.post('/message/new', async (req, res) => {
         const newMessage = {
             id: messages[sessionId].length + 1,
             content: message,
-            response: response.choices[0].message.content
+            response: null
         };
+
+        // Send the system message and user message to OpenAI
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [systemMessage, { role: "user", content: message }],
+        });
+
+        // Update the response in the new message object
+        newMessage.response = response.choices[0].message.content;
 
         // Store the message under the session ID
         messages[sessionId].push(newMessage);
@@ -106,13 +79,18 @@ app.post('/message/:id', async (req, res) => {
     const { id } = req.params;
     const { message } = req.body;
     try {
-        console.log(`Received message for session ${id}:`, message);
 
         // Fetch the existing conversation from the database
         const [rows] = await pool.execute('SELECT * FROM conversations WHERE session_id = ?', [id]);
 
         // Initialize messages array
         let messages = [];
+
+        // Define the system message
+        const systemMessage = {
+            role: "system",
+            content: defaultMessage
+        };
 
         // Check if a conversation was found
         if (rows.length > 0) {
@@ -125,8 +103,8 @@ app.post('/message/:id', async (req, res) => {
             }
         }
 
-        // Add the new user message to the conversation
-        messages.push({ role: "user", content: message });
+        // Add the system message and new user message to the conversation
+        messages.push(systemMessage, { role: "user", content: message });
 
         // Send the entire conversation to OpenAI
         const response = await openai.chat.completions.create({
@@ -173,6 +151,5 @@ process.on('unhandledRejection', (err) => {
 
 const PORT = 3001;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
     console.log(`Server is running on port ${PORT}`);
 });
