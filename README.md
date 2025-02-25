@@ -84,3 +84,12 @@ npm start
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html#UsingWithRDS.SSL.CertificatesAllRegions
 
 ### Add SSL cert to project and connect CA cert to the us-west-2 region pem file
+
+
+
+# Palatte
+White: #ffffff
+Light Green: #e1ffc0
+Green: #6fe5c4
+Orange: #f39461
+Red: #f35155
